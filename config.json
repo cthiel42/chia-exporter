@@ -1,0 +1,9 @@
+{
+	"metrics": [
+		"get_blockchain_state",
+		"get_wallet_balance",
+		"get_plots"
+	],
+	"port": 9101
+	
+}
