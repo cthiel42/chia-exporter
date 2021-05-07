@@ -13,7 +13,7 @@ RUN ln -s /usr/bin/python3.8 /usr/bin/python
 RUN git clone https://github.com/Chia-Network/chia-blockchain.git /opt/chia-blockchain
 COPY . /opt/chia-blockchain
 WORKDIR /opt/chia-blockchain
-RUN python3.8 -m pip install wheel requests prometheus-client
+RUN python3.8 -m pip install wheel requests prometheus-client bs4 lxml
 RUN python3.8 -m pip install --extra-index-url https://pypi.chia.net/simple/ miniupnpc==2.1
 RUN python3.8 -m pip install -e .
 

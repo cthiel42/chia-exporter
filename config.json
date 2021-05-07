@@ -2,7 +2,8 @@
 	"metrics": [
 		"get_blockchain_state",
 		"get_wallet_balance",
-		"get_plots"
+		"get_plots",
+		"get_pricing"
 	],
 	"port": 9101
 	
