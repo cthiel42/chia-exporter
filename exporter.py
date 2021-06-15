@@ -107,7 +107,7 @@ class Collector(object):
             resp = requests.get("https://coinmarketcap.com/currencies/chia-network/")
             soup = BeautifulSoup(resp.content, features="lxml")
             usd_price = float(soup.find_all("div",class_="priceValue___11gHJ")[0].text[1:].replace(",",""))
-            vol_24hr = float(soup.find_all("div",class_="statsValue___2iaoZ")[0].text[1:].replace(",",""))    
+            vol_24hr = float(soup.find_all("div",class_="statsValue___2iaoZ")[2].text[1:].replace(",",""))    
 
             metric1 = Metric('chia_usd_price','Chia USD Price',"summary")
             metric1.add_sample('chia_usd_price',value=usd_price,labels={})
