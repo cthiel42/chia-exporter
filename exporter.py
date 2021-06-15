@@ -45,12 +45,17 @@ class Collector(object):
         client.close()
         
         metric1 = Metric('chia_network_size',"Network size in bytes","summary")
-        metric1.add_sample('chia_network_size',value=results["space"], labels={})
+        metric1.add_sample('chia_network_size',value=results["space"],labels={})
         metric2 = Metric('chia_network_difficulty',"Network difficulty","summary")
-        metric2.add_sample('chia_network_difficulty',value=results["difficulty"], labels={})
+        metric2.add_sample('chia_network_difficulty',value=results["difficulty"],labels={})
+        metric3 = Metric('chia_is_node_synced',"Is Node Synced To Blockchain","summary")
+        node_synced = 0
+        if results["sync"]["synced"] == True:
+            node_synced = 1
+        metric3.add_sample('chia_is_node_synced',value=node_synced,labels={})
         
         print(name+": Done in "+str(time.time()-start)+" seconds")
-        return [metric1,metric2]
+        return [metric1,metric2,metric3]
 
     async def get_wallet_balance(self):
         name = "get_wallet_balance"
@@ -59,16 +64,20 @@ class Collector(object):
 
         client = await WalletRpcClient.create("host.docker.internal",9256,Path("/root/.chia/mainnet"),self.config)
         wallets = await client.get_wallets()
+        height_info = await client.get_height_info()
 
         metric1 = Metric('chia_wallet_balance',"Wallet balance","summary")
         for wallet in wallets:
             results = await client.get_wallet_balance(wallet["id"])
             metric1.add_sample('chia_wallet_balance',value=results["confirmed_wallet_balance"], labels={"wallet_id":str(wallet["id"])})
 
+        metric2 = Metric('chia_wallet_height','Block Height of Chia Wallet','summary')
+        metric2.add_sample('chia_wallet_height',value=height_info,labels={})
+        
         client.close()
 
         print(name+": Done in "+str(time.time()-start)+" seconds")
-        return [metric1]
+        return [metric1,metric2]
 
     async def get_plots(self):
         name = "get_plots"
@@ -94,15 +103,20 @@ class Collector(object):
         start = time.time()
         print(name+": Starting")
 
-        resp = requests.get("https://coinmarketcap.com/currencies/chia-network/")
-        soup = BeautifulSoup(resp.content, features="lxml")
-        usd_price = float(soup.find_all("div",class_="priceValue___11gHJ")[0].text[1:].replace(",",""))
-        vol_24hr = float(soup.find_all("div",class_="sc-16r8icm-0 fIhwvd")[0].find_all("tr")[3].find_all("span")[2].text[1:].replace(",",""))     
+        try:
+            resp = requests.get("https://coinmarketcap.com/currencies/chia-network/")
+            soup = BeautifulSoup(resp.content, features="lxml")
+            usd_price = float(soup.find_all("div",class_="priceValue___11gHJ")[0].text[1:].replace(",",""))
+            vol_24hr = float(soup.find_all("div",class_="statsValue___2iaoZ")[0].text[1:].replace(",",""))    
 
-        metric1 = Metric('chia_usd_price','Chia USD Price',"summary")
-        metric1.add_sample('chia_usd_price',value=usd_price,labels={})
-        metric2 = Metric('chia_24hr_volume_usd','Chia 24 Hour Volume Traded',"summary")
-        metric2.add_sample('chia_24hr_volume_usd',value=vol_24hr,labels={})
+            metric1 = Metric('chia_usd_price','Chia USD Price',"summary")
+            metric1.add_sample('chia_usd_price',value=usd_price,labels={})
+            metric2 = Metric('chia_24hr_volume_usd','Chia 24 Hour Volume Traded',"summary")
+            metric2.add_sample('chia_24hr_volume_usd',value=vol_24hr,labels={})
+        except Exception as e:
+            print(name+": Failed to run. Error follows")
+            print(e)
+            return []
 
         print(name+": Done in "+str(time.time()-start)+" seconds")
         return [metric1,metric2]
